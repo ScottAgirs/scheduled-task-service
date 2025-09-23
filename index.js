@@ -62,10 +62,10 @@ async function setupQueue() {
                 aspx_auth,
                 lp30_session
             });
-            console.log(`⚪️ ~ setupQueue ~ response:`, response)
+            console.log(`⚪️ ~ setupQueue ~ response:`, response.data);
 
             if (response.data.status !== "success") {
-                console.error("Fetch ERROR:", response.data);
+                console.error("🟥 Fetch ERROR:", response);
                 // TODO: Notify/log the error
             }
             
