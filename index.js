@@ -12,8 +12,8 @@ const requestQueue = new Queue("requestQueue", {
   redis: { host: "127.0.0.1", port: 6379 }
 });
 
-// Run every 5 minutes
-const INTERVAL = 1000 * 60 * 5;
+// Run every 15 minutes
+const INTERVAL = 1000 * 60 * 15;
 
 
 function formatLogTimestamp(date = new Date()) {
