@@ -12,7 +12,7 @@ const requestQueue = new Queue("requestQueue", {
   redis: { host: "127.0.0.1", port: 6379 }
 });
 
-const INTERVAL = 1000 * 60 * 5; // 5 minutes
+const INTERVAL = 1000 * 60 * 10; // 10 minutes
 
 
 function formatLogTimestamp(date = new Date()) {
@@ -72,15 +72,15 @@ async function setupQueue() {
             parseLifelabs(response.data.s3_key);
 
             console.log('Acknowledging results...');
-            // const ack = await axios.post(ACK_ENDPOINT, {
-            //   session_cookie,
-            //   aspx_auth,
-            //   lp30_session,
-            //   status: 'Positive',
-            // });
+            const ack = await axios.post(ACK_ENDPOINT, {
+              session_cookie,
+              aspx_auth,
+              lp30_session,
+              status: 'Positive',
+            });
 
-            // console.log(`🚀 ~ ack.data:`, ack.data);
-            console.log(`⚪️ ${formatLogTimestamp()} ~ skipping acknowledge results`);
+            console.log(`🚀 ~ ack.data:`, ack.data);
+            // console.log(`⚪️ ${formatLogTimestamp()} ~ skipping acknowledge results`);
 
             await axios.post(LOGOUT_ENDPOINT, {
                 session_cookie,
