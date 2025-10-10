@@ -11,8 +11,8 @@ const ACK_ENDPOINT = `${BASE_LIFELABS_ENDPOINT}/acknowledge`;
 const requestQueue = new Queue("requestQueue", {
   redis: { host: "127.0.0.1", port: 6379 }
 });
-
-const INTERVAL = 1000 * 60 * 10; // 10 minutes
+//every 5 hours
+const INTERVAL = 1000 * 60 * 60 * 5;
 
 
 function formatLogTimestamp(date = new Date()) {
