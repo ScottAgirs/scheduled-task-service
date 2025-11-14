@@ -19,7 +19,7 @@ const requestQueue = new Queue("requestQueue", {
 
 const cloudWatchLogs = new CloudWatchLogsClient({ region: process.env.AWS_REGION || "ca-central-1" });
 
-const INTERVAL = 1000 * 60 * 10; // 10 minutes
+const INTERVAL = 1000 * 60 * 5; // 5 minutes
 
 
 function formatLogTimestamp(date = new Date()) {
@@ -205,7 +205,6 @@ async function setupQueue() {
               jobId,
               ackStatus: ack.data?.status 
             });
-
 
             await axios.post(LOGOUT_ENDPOINT, {
                 session_cookie,
