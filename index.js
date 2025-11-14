@@ -19,7 +19,8 @@ const requestQueue = new Queue("requestQueue", {
 
 const cloudWatchLogs = new CloudWatchLogsClient({ region: process.env.AWS_REGION || "ca-central-1" });
 
-const INTERVAL = 1000 * 60 * 5; // 5 minutes
+const MINUTES_COUNT = 10;
+const INTERVAL = 1000 * 60 * MINUTES_COUNT;
 const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
 
