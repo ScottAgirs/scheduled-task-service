@@ -130,7 +130,6 @@ async function setupQueue() {
     // TODO: Improve this
   const repeatableJobs = await requestQueue.getRepeatableJobs();
     for (const job of repeatableJobs) {
-        console.log(`⚪️ ${formatLogTimestamp()} ~ repeatableJobs ~ job.key:`, job.key)
         
         await requestQueue.removeRepeatableByKey(job.key);
     }
@@ -159,8 +158,6 @@ async function setupQueue() {
           interval: INTERVAL 
         });
         
-        console.log(`🟢 ${formatLogTimestamp()} ~ requestQueue.process`);
-   
         try {
             const { session_cookie, aspx_auth, lp30_session } = await authenticate();
 
@@ -174,7 +171,6 @@ async function setupQueue() {
                 aspx_auth,
                 lp30_session
             });
-            console.log(`⚪️ ~ setupQueue ~ response:`, response.data);
 
             if (response.data.status !== "success") {
                 await logToCloudWatch("Fetch request failed", "ERROR", { 
@@ -193,7 +189,6 @@ async function setupQueue() {
               s3Key: response.data.s3_key 
             });
             
-            console.log("Will parse");
             parseLifelabs(response.data.s3_key);
 
             await logToCloudWatch("Parsing completed, acknowledging results", "INFO", { 
@@ -202,7 +197,6 @@ async function setupQueue() {
               s3Key: response.data.s3_key 
             });
 
-            console.log('Acknowledging results...');
             const ack = await axios.post(ACK_ENDPOINT, {
               session_cookie,
               aspx_auth,
@@ -216,8 +210,6 @@ async function setupQueue() {
               ackStatus: ack.data?.status 
             });
 
-            console.log(`🚀 ~ ack.data:`, ack.data);
-            // console.log(`⚪️ ${formatLogTimestamp()} ~ skipping acknowledge results`);
 
             await axios.post(LOGOUT_ENDPOINT, {
                 session_cookie,
@@ -229,6 +221,7 @@ async function setupQueue() {
               step: "cycle_complete", 
               jobId 
             });
+            console.log(`🟩 ${formatLogTimestamp()} ~ Completed.`)
 
         } catch (error) {
             await logToCloudWatch("Integration error occurred", "ERROR", { 
