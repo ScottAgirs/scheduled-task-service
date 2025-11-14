@@ -20,6 +20,7 @@ const requestQueue = new Queue("requestQueue", {
 const cloudWatchLogs = new CloudWatchLogsClient({ region: process.env.AWS_REGION || "ca-central-1" });
 
 const INTERVAL = 1000 * 60 * 5; // 5 minutes
+const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
 
 function formatLogTimestamp(date = new Date()) {
@@ -33,11 +34,9 @@ async function logToCloudWatch(message, level = "INFO", additionalData = {}) {
     const timestamp = Date.now();
     const logEvent = {
       timestamp,
-      message: `${message} ||| 
-      ${JSON.stringify({
-        message,
-        ...additionalData
-      })}`
+      message: `${message} 
+      ---
+      ${JSON.stringify(additionalData)}`
     };
 
     // Use error log group for ERROR level logs, regular log group for others
@@ -121,7 +120,7 @@ async function setupQueue() {
     
     await logToCloudWatch("⚪️ Setting up queue", "INFO", { 
       step: "queue_setup_start", 
-      interval: INTERVAL 
+      int: HUMAN_READABLE_INTERVAL 
     });
 
     // Drop existing jobs before adding a new one
@@ -144,7 +143,7 @@ async function setupQueue() {
 
     await logToCloudWatch("🟢 Queue setup completed", "INFO", { 
       step: "queue_setup_complete", 
-      interval: INTERVAL 
+      int: HUMAN_READABLE_INTERVAL 
     });
 
     requestQueue.process(async (job) => {
@@ -153,7 +152,7 @@ async function setupQueue() {
         await logToCloudWatch("⚪️ Starting polling cycle", "INFO", { 
           step: "cycle_start", 
           jobId,
-          interval: INTERVAL 
+          int: HUMAN_READABLE_INTERVAL 
         });
         
         try {
