@@ -84,7 +84,7 @@ async function initializeCloudWatchLogs() {
       }
     }
 
-    console.log(`✅ CloudWatch logging initialized for ${LOG_GROUP_NAME}/${LOG_STREAM_NAME} and ${ERROR_LOG_GROUP_NAME}/${LOG_STREAM_NAME}`);
+    console.log(`✅ CW initialized for ${LOG_GROUP_NAME}/${LOG_STREAM_NAME} and ${ERROR_LOG_GROUP_NAME}/${LOG_STREAM_NAME}. Polling interval set to ${HUMAN_READABLE_INTERVAL}.`);
   } catch (error) {
     console.error("Failed to initialize CloudWatch logging:", error.message);
   }
