@@ -15,9 +15,9 @@ const requestQueue = new Queue("requestQueue", {
   redis: { host: "127.0.0.1", port: 6379 }
 });
 
-const MINUTES_COUNT = 10;
+const MINUTES_COUNT = 5;
 const INTERVAL = 1000 * 60 * MINUTES_COUNT;
-const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
+export const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
 
 function formatLogTimestamp(date = new Date()) {
