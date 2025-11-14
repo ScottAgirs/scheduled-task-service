@@ -17,7 +17,7 @@ const requestQueue = new Queue("requestQueue", {
 
 const MINUTES_COUNT = 5;
 const INTERVAL = 1000 * 60 * MINUTES_COUNT;
-export const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
+const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
 
 function formatLogTimestamp(date = new Date()) {
@@ -51,6 +51,7 @@ async function authenticate() {
 }
 
 async function setupQueue() {
+    console.log(`${formatLogTimestamp()} ~ Every ${HUMAN_READABLE_INTERVAL} minutes...`);
     await initializeCloudWatchLogs(LOG_STREAM_NAME);
     
     await logToCloudWatch("Setting up queue", "INFO", { 
