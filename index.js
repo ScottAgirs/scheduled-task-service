@@ -30,7 +30,9 @@ function formatLogTimestamp(date = new Date()) {
 
 async function logToCloudWatch(message, level = "INFO", additionalData = {}) {
   try {
+    const timestamp = Date.now();
     const logEvent = {
+      timestamp,
       message: `${message} ||| 
       ${JSON.stringify({
         message,
