@@ -30,16 +30,12 @@ function formatLogTimestamp(date = new Date()) {
 
 async function logToCloudWatch(message, level = "INFO", additionalData = {}) {
   try {
-    const timestamp = Date.now();
     const logEvent = {
-      timestamp,
-      message: JSON.stringify({
-        timestamp: new Date(timestamp).toISOString(),
-        level,
+      message: `${message} ||| 
+      ${JSON.stringify({
         message,
-        service: "lifelabs-polling",
         ...additionalData
-      })
+      })}`
     };
 
     // Use error log group for ERROR level logs, regular log group for others
@@ -93,7 +89,7 @@ async function initializeCloudWatchLogs() {
 }
 
 async function authenticate() {
-    await logToCloudWatch("Starting authentication", "INFO", { step: "authentication_start" });
+    await logToCloudWatch("⚪️ Starting authentication", "INFO", { step: "authentication_start" });
     
     const response = await axios.post(AUTH_ENDPOINT);
     
@@ -106,7 +102,7 @@ async function authenticate() {
         throw new Error("Authentication failed");
     }
     
-    await logToCloudWatch("Authentication successful", "INFO", { 
+    await logToCloudWatch("🟢 Authentication successful", "INFO", { 
       step: "authentication_success",
       hasSessionCookie: !!response?.data?.session_cookie,
       hasAspxAuth: !!response?.data?.aspx_auth,
@@ -121,7 +117,7 @@ async function authenticate() {
 async function setupQueue() {
     await initializeCloudWatchLogs();
     
-    await logToCloudWatch("Setting up queue", "INFO", { 
+    await logToCloudWatch("⚪️ Setting up queue", "INFO", { 
       step: "queue_setup_start", 
       interval: INTERVAL 
     });
@@ -134,7 +130,7 @@ async function setupQueue() {
         await requestQueue.removeRepeatableByKey(job.key);
     }
 
-    await logToCloudWatch("Removed existing repeatable jobs", "INFO", { 
+    await logToCloudWatch("⚪️ Removed existing repeatable jobs", "INFO", { 
       step: "queue_cleanup", 
       removedJobsCount: repeatableJobs.length 
     });
@@ -144,7 +140,7 @@ async function setupQueue() {
         { repeat: { every: INTERVAL } }
     );
 
-    await logToCloudWatch("Queue setup completed", "INFO", { 
+    await logToCloudWatch("🟢 Queue setup completed", "INFO", { 
       step: "queue_setup_complete", 
       interval: INTERVAL 
     });
@@ -152,7 +148,7 @@ async function setupQueue() {
     requestQueue.process(async (job) => {
         const jobId = job.id || 'unknown';
         
-        await logToCloudWatch("Starting polling cycle", "INFO", { 
+        await logToCloudWatch("⚪️ Starting polling cycle", "INFO", { 
           step: "cycle_start", 
           jobId,
           interval: INTERVAL 
@@ -161,7 +157,7 @@ async function setupQueue() {
         try {
             const { session_cookie, aspx_auth, lp30_session } = await authenticate();
 
-            await logToCloudWatch("Fetching lab results", "INFO", { 
+            await logToCloudWatch("⚪️ Fetching lab results", "INFO", { 
               step: "fetch_start", 
               jobId 
             });
@@ -173,17 +169,17 @@ async function setupQueue() {
             });
 
             if (response.data.status !== "success") {
-                await logToCloudWatch("Fetch request failed", "ERROR", { 
+                await logToCloudWatch("🟥 Fetch request failed", "ERROR", { 
                   step: "fetch_failed", 
                   jobId,
                   status: response.data.status,
                   response: response.data 
                 });
-                console.error("🟥 Fetch ERROR:", response);
+
                 return; // Exit early on fetch failure
             }
-            
-            await logToCloudWatch("Fetch successful, starting parsing", "INFO", { 
+
+            await logToCloudWatch("🟢 Fetch successful, starting parsing", "INFO", { 
               step: "fetch_success", 
               jobId,
               s3Key: response.data.s3_key 
@@ -191,7 +187,7 @@ async function setupQueue() {
             
             parseLifelabs(response.data.s3_key);
 
-            await logToCloudWatch("Parsing completed, acknowledging results", "INFO", { 
+            await logToCloudWatch("🟢 Parsing completed, acknowledging results", "INFO", { 
               step: "parsing_complete", 
               jobId,
               s3Key: response.data.s3_key 
@@ -204,7 +200,7 @@ async function setupQueue() {
               status: 'Positive',
             });
 
-            await logToCloudWatch("Results acknowledged", "INFO", { 
+            await logToCloudWatch("🟢 Results acknowledged", "INFO", { 
               step: "acknowledge_success", 
               jobId,
               ackStatus: ack.data?.status 
@@ -217,22 +213,20 @@ async function setupQueue() {
                 lp30_session
             });
 
-            await logToCloudWatch("Polling cycle completed successfully", "INFO", { 
+            await logToCloudWatch("🟢 Polling cycle completed successfully", "INFO", { 
               step: "cycle_complete", 
               jobId 
             });
             console.log(`🟩 ${formatLogTimestamp()} ~ Completed.`)
 
         } catch (error) {
-            await logToCloudWatch("Integration error occurred", "ERROR", { 
+            await logToCloudWatch("🟥 Integration error occurred", "ERROR", { 
               step: "integration_error", 
               jobId,
               error: error.message,
               stack: error.stack,
               responseData: error.response?.data 
             });
-            
-            console.error(`❌ ${formatLogTimestamp()} Integration error:`, error.response?.data || error.message);
         }
     });
 }
