@@ -24,13 +24,20 @@ async function authenticate() {
 
     await logToCloudWatch("⚪️ Authentication response", "INFO", { 
       step: "authentication_response",
-      response
+      status: response?.status,
+      statusText: response?.statusText,
+      dataStatus: response?.data?.status,
+      hasSessionCookie: !!response?.data?.session_cookie,
+      hasAspxAuth: !!response?.data?.aspx_auth,
+      hasLp30Session: !!response?.data?.lp30_session
     }, LOG_STREAM_NAME);
     
     if (response?.data?.status === "failed") {
         await logToCloudWatch(`🛑 Authentication failed`, "ERROR", { 
           step: "authentication_failed", 
-          response 
+          status: response?.status,
+          statusText: response?.statusText,
+          responseData: response?.data
         }, LOG_STREAM_NAME);
         
         throw new Error("Authentication failed");
