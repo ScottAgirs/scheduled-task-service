@@ -19,6 +19,10 @@ const MINUTES_COUNT = 5;
 const INTERVAL = 1000 * 60 * MINUTES_COUNT;
 const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
+function generateTimestamp() {
+    return new Date().toISOString();
+}
+
 async function authenticate() {
     const response = await axios.post(AUTH_ENDPOINT);
 
@@ -48,7 +52,7 @@ async function authenticate() {
 }
 
 async function setupQueue() {
-    console.log(`~ Polls every ${HUMAN_READABLE_INTERVAL} minutes...`);
+    console.log(`~ ${generateTimestamp()} Polls every ${HUMAN_READABLE_INTERVAL} minutes...`);
     await initializeCloudWatchLogs(LOG_STREAM_NAME);
     
     await logToCloudWatch("Setting up queue", "INFO", { 
