@@ -21,7 +21,7 @@ const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
 // generateTimestamp function like: MMM DD, HH:MM
 function generateTimestamp() {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
     return new Date().toLocaleString('en-US', options);
 }
 
