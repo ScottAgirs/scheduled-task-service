@@ -9,7 +9,7 @@ const FETCH_ENDPOINT = `${BASE_LIFELABS_ENDPOINT}/fetch-results`;
 const LOGOUT_ENDPOINT = `${BASE_LIFELABS_ENDPOINT}/logout`;
 const ACK_ENDPOINT = `${BASE_LIFELABS_ENDPOINT}/acknowledge`;
 
-const LOG_STREAM_NAME = "polling";
+const LOG_STREAM_NAME = "scheduled-tasks-lifelabs";
 
 const requestQueue = new Queue("requestQueue", {
   redis: { host: "127.0.0.1", port: 6379 }
@@ -19,39 +19,28 @@ const MINUTES_COUNT = 5;
 const INTERVAL = 1000 * 60 * MINUTES_COUNT;
 const HUMAN_READABLE_INTERVAL = INTERVAL / (1000 * 60) + " minutes";
 
-
-function formatLogTimestamp(date = new Date()) {
-  const time = date.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
-  const dateStr = date.toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
-  return `[${dateStr} :: ${time}]`;
-}
-
 async function authenticate() {
-    await logToCloudWatch("⚪️ Starting authentication", "INFO", { step: "authentication_start" }, LOG_STREAM_NAME);
-    
     const response = await axios.post(AUTH_ENDPOINT);
+
+    await logToCloudWatch("⚪️ Authentication response", "INFO", { 
+      step: "authentication_response",
+      response
+    }, LOG_STREAM_NAME);
     
     if (response?.data?.status === "failed") {
-        await logToCloudWatch("Authentication failed", "ERROR", { 
+        await logToCloudWatch(`🛑 Authentication failed`, "ERROR", { 
           step: "authentication_failed", 
-          response: response?.data 
+          response 
         }, LOG_STREAM_NAME);
-        console.error("Authentication ERROR:", response);
+        
         throw new Error("Authentication failed");
     }
-    
-    await logToCloudWatch("🟢 Authentication successful", "INFO", { 
-      step: "authentication_success",
-      hasSessionCookie: !!response?.data?.session_cookie,
-      hasAspxAuth: !!response?.data?.aspx_auth,
-      hasLp30Session: !!response?.data?.lp30_session
-    }, LOG_STREAM_NAME);
     
     return response.data; // Contains session cookies
 }
 
 async function setupQueue() {
-    console.log(`${formatLogTimestamp()} ~ Every ${HUMAN_READABLE_INTERVAL} minutes...`);
+    console.log(`~ Polls every ${HUMAN_READABLE_INTERVAL} minutes...`);
     await initializeCloudWatchLogs(LOG_STREAM_NAME);
     
     await logToCloudWatch("Setting up queue", "INFO", { 
@@ -77,7 +66,7 @@ async function setupQueue() {
         { repeat: { every: INTERVAL } }
     );
 
-    await logToCloudWatch("🟢 Queue setup completed", "INFO", { 
+    await logToCloudWatch(`🟢 Queue setup completed`, "INFO", { 
       step: "queue_setup_complete", 
       int: HUMAN_READABLE_INTERVAL 
     }, LOG_STREAM_NAME);
@@ -116,7 +105,7 @@ async function setupQueue() {
                 return; // Exit early on fetch failure
             }
 
-            await logToCloudWatch("⚪️ Fetch successful, starting parsing", "INFO", { 
+            await logToCloudWatch("⚪️ Fetch successful.", "INFO", { 
               step: "fetch_success", 
               jobId,
               s3Key: response.data.s3_key 
@@ -153,8 +142,6 @@ async function setupQueue() {
               step: "cycle_complete", 
               jobId 
             }, LOG_STREAM_NAME);
-            console.log(`🟩 ${formatLogTimestamp()} ~ Completed.`)
-
         } catch (error) {
             await logToCloudWatch("🟥 Integration error occurred", "ERROR", { 
               step: "integration_error", 

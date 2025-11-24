@@ -9,10 +9,10 @@ const { logToCloudWatch } = require('../../../lib/cloudwatch-logger');
 
 const RECEIVED_RESULTS_URL = "http://172.31.7.125:80/rest/v1/lab-results/lifelabs";
 
-const LOG_STREAM_NAME = "parser";
+const LOG_STREAM_NAME = "scheduled-tasks-lifelabs";
 
 const parseLifelabs = async (fileKey) => {
-  await logToCloudWatch("🟡 Starting Lifelabs parsing", "INFO", { 
+  await logToCloudWatch(`🟡 Starting Lifelabs parsing`, "INFO", {
     step: "parsing_start",
     fileKey,
     service: "lifelabs-parser" 
@@ -20,7 +20,7 @@ const parseLifelabs = async (fileKey) => {
 
   // Check and validate file key
   if (!fileKey || !fileKey.endsWith('.xml')) {
-    await logToCloudWatch("🟥 Invalid file key provided", "ERROR", { 
+    await logToCloudWatch(`🟥 Invalid file key provided`, "ERROR", {
       step: "validation_failed",
       fileKey,
       reason: "Invalid file key. Only .xml files are accepted.",
@@ -32,14 +32,8 @@ const parseLifelabs = async (fileKey) => {
     };
   }
 
-  await logToCloudWatch("⚪️ File key validation passed", "INFO", { 
-    step: "validation_success",
-    fileKey,
-    service: "lifelabs-parser" 
-  }, LOG_STREAM_NAME);
-
   try {
-    await logToCloudWatch("⚪️ Getting signed S3 URL", "INFO", { 
+    await logToCloudWatch(`⚪️ Getting signed S3 URL`, "INFO", {
       step: "s3_url_start",
       fileKey,
       service: "lifelabs-parser" 
@@ -49,7 +43,7 @@ const parseLifelabs = async (fileKey) => {
       await getSignedFileUrl(fileKey);
 
     if (signedXmlUrlError || !signedXmlUrl) {
-      await logToCloudWatch("🟥 Failed to get signed S3 URL", "ERROR", { 
+      await logToCloudWatch(`🟥 Failed to get signed S3 URL`, "ERROR", {
         step: "s3_url_failed",
         fileKey,
         error: signedXmlUrlError,
@@ -62,16 +56,10 @@ const parseLifelabs = async (fileKey) => {
       };
     }
 
-    await logToCloudWatch("⚪️ S3 signed URL obtained", "INFO", { 
+    await logToCloudWatch(`⚪️ Got S3 URL 2-DOWNLOAD`, "INFO", { 
       step: "s3_url_success",
       fileKey,
       hasUrl: !!signedXmlUrl,
-      service: "lifelabs-parser" 
-    }, LOG_STREAM_NAME);
-
-    await logToCloudWatch("🟡 Downloading XML from S3", "INFO", { 
-      step: "xml_download_start",
-      fileKey,
       service: "lifelabs-parser" 
     }, LOG_STREAM_NAME);
 
@@ -82,7 +70,7 @@ const parseLifelabs = async (fileKey) => {
     });
     
     if (response.status !== 200) {
-      await logToCloudWatch("🟥 XML download failed", "ERROR", { 
+      await logToCloudWatch(`🟥 XML download failed`, "ERROR", {
         step: "xml_download_failed",
         fileKey,
         status: response.status,
@@ -95,16 +83,10 @@ const parseLifelabs = async (fileKey) => {
       };
     }
 
-    await logToCloudWatch("⚪️ XML downloaded successfully", "INFO", { 
+    await logToCloudWatch(`⚪️ XML downloaded - 2-PROCESS`, "INFO", { 
       step: "xml_download_success",
       fileKey,
       xmlSize: response.data?.length || 0,
-      service: "lifelabs-parser" 
-    }, LOG_STREAM_NAME);
-
-    await logToCloudWatch("Processing XML and extracting HL7 messages", "INFO", { 
-      step: "hl7_extraction_start",
-      fileKey,
       service: "lifelabs-parser" 
     }, LOG_STREAM_NAME);
 
@@ -113,33 +95,12 @@ const parseLifelabs = async (fileKey) => {
     const messages = await extractHL7MessagesFromXML(xmlData);
     const hl7StringOrArray = messages.map((msg) => msg.content);
 
-    await logToCloudWatch("⚪️ HL7 messages extracted", "INFO", { 
-      step: "hl7_extraction_success",
-      fileKey,
-      messageCount: messages.length,
-      service: "lifelabs-parser" 
-    }, LOG_STREAM_NAME);
-
-    await logToCloudWatch("Parsing HL7 messages", "INFO", { 
-      step: "hl7_parsing_start",
-      fileKey,
-      messageCount: messages.length,
-      service: "lifelabs-parser" 
-    }, LOG_STREAM_NAME);
-
     const parsedMessagesArray = Array.isArray(hl7StringOrArray)
     ? hl7StringOrArray.map((msg) => parseEMRHL7Message(msg))
     : parseEMRHL7Message(hl7StringOrArray);
 
-    await logToCloudWatch("⚪️ HL7 messages parsed", "INFO", { 
-      step: "hl7_parsing_success",
-      fileKey,
-      parsedMessageCount: parsedMessagesArray.length,
-      service: "lifelabs-parser" 
-    }, LOG_STREAM_NAME);
-    
     if (parsedMessagesArray.length > 0) {
-      await logToCloudWatch("🟡 Uploading parsed results to S3", "INFO", { 
+      await logToCloudWatch(`🟡 Parsed. Uploading ${parsedMessagesArray.length} msgs to S3`, "INFO", { 
         step: "s3_upload_start",
         fileKey,
         parsedMessageCount: parsedMessagesArray.length,
