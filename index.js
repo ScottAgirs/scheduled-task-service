@@ -33,7 +33,7 @@ async function authenticate() {
       hasLp30Session: !!response?.data?.lp30_session
     }, LOG_STREAM_NAME);
     
-    if (response?.data?.status === "failed" || response?.data?.status !== 200) {
+    if (response?.data?.status === "failed" || response?.data?.status !== 200 || response.data?.error) {
         await logToCloudWatch(`🛑 Authentication failed`, "ERROR", { 
           step: "authentication_failed", 
           status: response?.status,
