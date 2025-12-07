@@ -4,12 +4,8 @@ const { S3Client } = require('@aws-sdk/client-s3');
 
 const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_BUCKET } =
   process.env;
-console.log(`⚪️ AWS CREDS: `, { 
-  AWS_ACCESS_KEY_ID,
-  AWS_SECRET_ACCESS_KEY: `${AWS_SECRET_ACCESS_KEY?.slice(0, 4)}...`,
-  AWS_REGION,
-  AWS_BUCKET
-})
+
+console.log(`⚪️ AWS AWS_BUCKET: ${AWS_BUCKET} :: AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}`);
 
 const missingVars = Object.entries({
   AWS_ACCESS_KEY_ID,
