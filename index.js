@@ -54,8 +54,7 @@ async function authenticate() {
 }
 
 async function setupQueue() {
-    console.log(`~ ${generateTimestamp()} Polls every ${HUMAN_READABLE_INTERVAL} minutes...`);
-    await initializeCloudWatchLogs(LOG_STREAM_NAME);
+    await initializeCloudWatchLogs(LOG_STREAM_NAME, HUMAN_READABLE_INTERVAL, generateTimestamp());
     
     await logToCloudWatch("Setting up queue", "INFO", { 
       step: "queue_setup_start", 
